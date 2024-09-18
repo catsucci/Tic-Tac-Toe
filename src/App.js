@@ -22,7 +22,7 @@ function GameBoard() {
   const GetBoard = () => board;
 
   const GetCell = ({ x, y }) => {
-    if (x != -1 && y != -1 && x < columns && y < rows) {
+    if (board[y][x].isCoordinatesValid({ xDim: columns, yDim: rows })) {
       return board[y][x];
     } else {
       console.log(
@@ -31,11 +31,90 @@ function GameBoard() {
     }
   };
 
+  /**
+    * Getting surrounding cells using clock direction
+  */
+  const GetSurroundingCells = ({ x, y }) => {
+    const cell = GetCell({ x, y });
+    const surroundingCells = [];
+    if (!cell.isCoordinatesValid({ xDim: columns, yDim: rows })) {
+      console.log(
+        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
+      );
+    }
+    // 12 o'clock
+    if (cell.GetCoordinates().y - 1 >= 0) {
+      surroundingCells.push({
+        cell: GetCell({ x: x, y: y - 1 }),
+        direction: 12,
+      });
+    }
+    // 1:30 o'clock
+    if (
+      cell.GetCoordinates().x + 1 <= columns &&
+      cell.GetCoordinates().y - 1 >= 0
+    ) {
+      surroundingCells.push({
+        cell: GetCell({ x: x + 1, y: y - 1 }),
+        direction: 1.5,
+      });
+    }
+    // 3 o'clock
+    if (cell.GetCoordinates().x + 1 <= columns) {
+      surroundingCells.push({
+        cell: GetCell({ x: x + 1, y: y }),
+        direction: 3,
+      });
+    }
+    // 4:30 o'clock
+    if (
+      cell.GetCoordinates().x + 1 <= columns &&
+      cell.GetCoordinates().y + 1 <= rows
+    ) {
+      surroundingCells.push({
+        cell: GetCell({ x: x + 1, y: y + 1 }),
+        direction: 4.5,
+      });
+    }
+    // 6 o'clock
+    if (cell.GetCoordinates().y + 1 <= rows) {
+      surroundingCells.push({
+        cell: GetCell({ x: x, y: y + 1}),
+        direction: 6,
+      });
+    }
+    // 7:30 o'clock
+    if (
+      cell.GetCoordinates().x - 1 >= 0 &&
+      cell.GetCoordinates().y + 1 <= rows
+    ) {
+      surroundingCells.push({
+        cell: GetCell({ x: x - 1, y: y + 1 }),
+        direction: 7.5,
+      });
+    }
+    // 9 o'clock
+    if (cell.GetCoordinates().x - 1 >= 0) {
+      surroundingCells.push({
+        cell: GetCell({ x: x - 1, y: y}),
+        direction: 9,
+      });
+    }
+    // 10:30 o'clock
+    if (
+      cell.GetCoordinates().x - 1 >= 0 &&
+      cell.GetCoordinates().y - 1 <= 0
+    ) {
+      surroundingCells.push({
+        cell: GetCell({ x: x - 1, y: y - 1 }),
+        direction: 10.5,
+      });
+    }
+  };
+
   const PlaceSymbol = (coordinates, player) => {
     const cell = GetCell(coordinates);
   };
-
-  console.log({ board: board });
 
   return {
     GetBoard,
@@ -57,11 +136,23 @@ function Cell({ x, y }) {
 
   const GetCoordinates = () => coordinates;
 
+  const isCoordinatesValid = ({ xDim, yDim }) => {
+    return (
+      coordinates.x != -1 &&
+      coordinates.y != -1 &&
+      coordinates.x < xDim &&
+      coordinates.y < yDim
+    );
+  };
+
   return {
     AddSymbol,
     GetSymbol,
     GetCoordinates,
+    isCoordinatesValid,
   };
 }
 
-GameBoard();
+let game = GameBoard();
+game.GetCell({ x: 0, y: 0 }).AddSymbol("X");
+console.log(game.GetCell({ x: 0, y: 0 }).GetSymbol());
