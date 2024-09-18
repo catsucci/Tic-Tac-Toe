@@ -21,27 +21,34 @@ function GameBoard() {
 
   const GetBoard = () => board;
 
+  const isCoordinatesValid = ({ x, y }) => {
+    return x >= 0 && y >= 0 && x < columns && y < rows;
+  };
+
   const GetCell = ({ x, y }) => {
-    if (board[y][x].isCoordinatesValid({ xDim: columns, yDim: rows })) {
+    if (isCoordinatesValid({ x: x, y: y })) {
       return board[y][x];
     } else {
       console.log(
         `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
       );
+      return null;
     }
   };
 
   /**
-    * Getting surrounding cells using clock direction
-  */
+   * Getting surrounding cells using clock direction
+   */
   const GetSurroundingCells = ({ x, y }) => {
-    const cell = GetCell({ x, y });
-    const surroundingCells = [];
-    if (!cell.isCoordinatesValid({ xDim: columns, yDim: rows })) {
+    if (!isCoordinatesValid({ x: x, y: y })) {
       console.log(
         `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
       );
+      return -1;
     }
+    const cell = GetCell({ x, y });
+    const surroundingCells = [];
+
     // 12 o'clock
     if (cell.GetCoordinates().y - 1 >= 0) {
       surroundingCells.push({
@@ -51,7 +58,7 @@ function GameBoard() {
     }
     // 1:30 o'clock
     if (
-      cell.GetCoordinates().x + 1 <= columns &&
+      cell.GetCoordinates().x + 1 < columns &&
       cell.GetCoordinates().y - 1 >= 0
     ) {
       surroundingCells.push({
@@ -60,7 +67,7 @@ function GameBoard() {
       });
     }
     // 3 o'clock
-    if (cell.GetCoordinates().x + 1 <= columns) {
+    if (cell.GetCoordinates().x + 1 < columns) {
       surroundingCells.push({
         cell: GetCell({ x: x + 1, y: y }),
         direction: 3,
@@ -68,8 +75,8 @@ function GameBoard() {
     }
     // 4:30 o'clock
     if (
-      cell.GetCoordinates().x + 1 <= columns &&
-      cell.GetCoordinates().y + 1 <= rows
+      cell.GetCoordinates().x + 1 < columns &&
+      cell.GetCoordinates().y + 1 < rows
     ) {
       surroundingCells.push({
         cell: GetCell({ x: x + 1, y: y + 1 }),
@@ -77,16 +84,16 @@ function GameBoard() {
       });
     }
     // 6 o'clock
-    if (cell.GetCoordinates().y + 1 <= rows) {
+    if (cell.GetCoordinates().y + 1 < rows) {
       surroundingCells.push({
-        cell: GetCell({ x: x, y: y + 1}),
+        cell: GetCell({ x: x, y: y + 1 }),
         direction: 6,
       });
     }
     // 7:30 o'clock
     if (
       cell.GetCoordinates().x - 1 >= 0 &&
-      cell.GetCoordinates().y + 1 <= rows
+      cell.GetCoordinates().y + 1 < rows
     ) {
       surroundingCells.push({
         cell: GetCell({ x: x - 1, y: y + 1 }),
@@ -96,20 +103,18 @@ function GameBoard() {
     // 9 o'clock
     if (cell.GetCoordinates().x - 1 >= 0) {
       surroundingCells.push({
-        cell: GetCell({ x: x - 1, y: y}),
+        cell: GetCell({ x: x - 1, y: y }),
         direction: 9,
       });
     }
     // 10:30 o'clock
-    if (
-      cell.GetCoordinates().x - 1 >= 0 &&
-      cell.GetCoordinates().y - 1 <= 0
-    ) {
+    if (cell.GetCoordinates().x - 1 >= 0 && cell.GetCoordinates().y - 1 >= 0) {
       surroundingCells.push({
         cell: GetCell({ x: x - 1, y: y - 1 }),
         direction: 10.5,
       });
     }
+    return surroundingCells;
   };
 
   const PlaceSymbol = (coordinates, player) => {
@@ -120,6 +125,7 @@ function GameBoard() {
     GetBoard,
     PlaceSymbol,
     GetCell,
+    GetSurroundingCells,
   };
 }
 
@@ -136,23 +142,23 @@ function Cell({ x, y }) {
 
   const GetCoordinates = () => coordinates;
 
-  const isCoordinatesValid = ({ xDim, yDim }) => {
-    return (
-      coordinates.x != -1 &&
-      coordinates.y != -1 &&
-      coordinates.x < xDim &&
-      coordinates.y < yDim
-    );
-  };
-
   return {
     AddSymbol,
     GetSymbol,
     GetCoordinates,
-    isCoordinatesValid,
   };
 }
 
 let game = GameBoard();
-game.GetCell({ x: 0, y: 0 }).AddSymbol("X");
-console.log(game.GetCell({ x: 0, y: 0 }).GetSymbol());
+// game.GetCell({ x: 0, y: 0 }).AddSymbol("X");
+// console.log(game_.GetCell({ x: 0, y: 0 }).GetSymbol());
+const cells = game.GetSurroundingCells({ x: 0, y: 0 });
+
+if (cells != -1) {
+  for (let i = 0; i < cells.length; i++) {
+    console.log({
+      cell: cells[i].cell.GetCoordinates(),
+      direction: cells[i].direction,
+    });
+  }
+}
