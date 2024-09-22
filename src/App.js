@@ -29,7 +29,7 @@ function GameBoard() {
     if (isCoordinatesValid({ x: x, y: y })) {
       return board[y][x];
     } else {
-      console.log(
+      console.error(
         `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
       );
       return null;
@@ -41,7 +41,7 @@ function GameBoard() {
    */
   const GetSurroundingCells = ({ x, y }) => {
     if (!isCoordinatesValid({ x: x, y: y })) {
-      console.log(
+      console.error(
         `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
       );
       return -1;
@@ -152,7 +152,7 @@ function Cell({ x, y }) {
 let game = GameBoard();
 // game.GetCell({ x: 0, y: 0 }).AddSymbol("X");
 // console.log(game_.GetCell({ x: 0, y: 0 }).GetSymbol());
-const cells = game.GetSurroundingCells({ x: 0, y: 0 });
+const cells = game.GetSurroundingCells({ x: 1, y: 1 });
 
 if (cells != -1) {
   for (let i = 0; i < cells.length; i++) {
