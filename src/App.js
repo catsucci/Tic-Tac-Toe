@@ -32,7 +32,7 @@ function GameBoard() {
       console.error(
         `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
       );
-      return null;
+      return 0;
     }
   };
 
@@ -44,7 +44,7 @@ function GameBoard() {
       console.error(
         `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
       );
-      return -1;
+      return 0;
     }
     const cell = GetCell({ x, y });
     const surroundingCells = [];
@@ -299,7 +299,7 @@ const GameController = (function (
             return 1;
           }
         } else {
-          console.log("hi");
+          console.log("It's a tie!");
           return 0;
         }
       }
