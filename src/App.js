@@ -3,7 +3,7 @@
 /**
  * main.js
  * Main JavaScript file for the project
- * Author: Catsucci
+ * Author: lunarhaze
  * Created: 2024-09-14
  */
 
@@ -117,15 +117,112 @@ function GameBoard() {
     return surroundingCells;
   };
 
+  const GetSurroundingCellByDirection = ({ x, y }, direction) => {
+    if (!isCoordinatesValid({ x: x, y: y })) {
+      console.error(
+        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
+      );
+      return -1;
+    }
+    const cell = GetCell({ x, y });
+
+    switch (direction) {
+      case 12:
+        if (cell.GetCoordinates().y - 1 >= 0) {
+          return GetCell({ x: x, y: y - 1 });
+        }
+        break;
+
+      case 1.5:
+        if (
+          cell.GetCoordinates().x + 1 < columns &&
+          cell.GetCoordinates().y - 1 >= 0
+        ) {
+          return GetCell({ x: x + 1, y: y - 1 });
+        }
+        break;
+
+      case 3:
+        if (cell.GetCoordinates().x + 1 < columns) {
+          return GetCell({ x: x + 1, y: y });
+        }
+        break;
+
+      case 4.5:
+        if (
+          cell.GetCoordinates().x + 1 < columns &&
+          cell.GetCoordinates().y + 1 < rows
+        ) {
+          return GetCell({ x: x + 1, y: y + 1 });
+        }
+        break;
+
+      case 6:
+        if (cell.GetCoordinates().y + 1 < rows) {
+          return GetCell({ x: x, y: y + 1 });
+        }
+        break;
+
+      case 7.5:
+        if (
+          cell.GetCoordinates().x - 1 >= 0 &&
+          cell.GetCoordinates().y + 1 < rows
+        ) {
+          return GetCell({ x: x - 1, y: y + 1 });
+        }
+        break;
+
+      case 9:
+        if (cell.GetCoordinates.x - 1 >= 0) {
+          return GetCell({ x: x - 1, y: y });
+        }
+        break;
+
+      case 10.5:
+        if (
+          cell.GetCoordinates().x - 1 >= 0 &&
+          cell.GetCoordinates().y - 1 >= 0
+        ) {
+          return GetCell({ x: x - 1, y: y - 1 });
+        }
+        break;
+    }
+    return 0;
+  };
+
   const PlaceSymbol = (coordinates, player) => {
     const cell = GetCell(coordinates);
+    if (cell.GetSymbol() === null) {
+      cell.AddSymbol(player.symbol);
+      return 1;
+    } else {
+      console.error(
+        `CELL OCCUPIED ERROR: CELL (${coordinates.x}, ${coordinates.y}) IS ALREADY OCCUPIED.`
+      );
+      return 0;
+    }
   };
+
+  function PrintBoard() {
+    for (let i = 0; i < rows; i++) {
+      let row = "";
+      for (let j = 0; j < columns; j++) {
+        row += board[i][j].GetSymbol() || "_";
+        if (j < columns - 1) {
+          row += " | ";
+        }
+      }
+      console.log(row);
+    }
+  }
 
   return {
     GetBoard,
     PlaceSymbol,
     GetCell,
     GetSurroundingCells,
+    GetSurroundingCellByDirection,
+    PrintBoard,
   };
 }
 
@@ -149,16 +246,81 @@ function Cell({ x, y }) {
   };
 }
 
-let game = GameBoard();
-// game.GetCell({ x: 0, y: 0 }).AddSymbol("X");
-// console.log(game_.GetCell({ x: 0, y: 0 }).GetSymbol());
-const cells = game.GetSurroundingCells({ x: 1, y: 1 });
+const GameController = (function (
+  playerOneName = "Player one",
+  playerTwoName = "Player two"
+) {
+  const board = GameBoard();
 
-if (cells != -1) {
-  for (let i = 0; i < cells.length; i++) {
-    console.log({
-      cell: cells[i].cell.GetCoordinates(),
-      direction: cells[i].direction,
+  const players = [
+    { name: playerOneName, symbol: "X" },
+    { name: playerTwoName, symbol: "O" },
+  ];
+
+  let activePlayer = players[0];
+
+  const SwitchActivePlayer = () => {
+    activePlayer = activePlayer === players[0] ? players[1] : players[0];
+  };
+
+  const GetActivePlayer = () => activePlayer;
+
+  const PrintNewRound = () => {
+    board.PrintBoard();
+    console.log(`It's ${activePlayer.name}'s turn.`);
+  };
+
+  const PlayNewRound = (coordinates) => {
+    if (board.PlaceSymbol(coordinates, activePlayer)) {
+      SwitchActivePlayer();
+      PrintNewRound();
+    }
+  };
+
+  const CheckForWin = (symbol, { x, y }) => {
+    const surroundingCells = board.GetSurroundingCells({ x, y });
+    surroundingCells.some((cell) => {
+      // console.log({ cell: cell, coordinates: cell.cell.GetCoordinates() });
+      if (cell.cell.GetSymbol() === symbol) {
+        let potentialWinningCell;
+        if (
+          (potentialWinningCell = board.GetSurroundingCellByDirection(
+            cell.cell.GetCoordinates(),
+            cell.direction
+          )) ||
+          (potentialWinningCell = board.GetSurroundingCellByDirection(
+            {x, y},
+            cell.direction <= 6 ? cell.direction + 6 : cell.direction - 6
+          ))
+        ) {
+          // console.log({ potentialWinningCell: potentialWinningCell, coordinates: potentialWinningCell.GetCoordinates(), symbol: potentialWinningCell.GetSymbol() });
+          if (potentialWinningCell.GetSymbol() === symbol) {
+            console.log(`${activePlayer.name} wins!`);
+            return 1;
+          }
+        } else {
+          console.log("hi");
+          return 0;
+        }
+      }
     });
-  }
-}
+  };
+
+  PrintNewRound();
+
+  return {
+    GetActivePlayer,
+    PlayNewRound,
+    CheckForWin,
+  };
+})();
+
+GameController.PlayNewRound({ x: 0, y: 1 });
+GameController.PlayNewRound({ x: 1, y: 1 });
+GameController.PlayNewRound({ x: 0, y: 0 });
+GameController.PlayNewRound({ x: 2, y: 0 });
+GameController.PlayNewRound({ x: 1, y: 0 });
+GameController.PlayNewRound({ x: 1, y: 2 });
+GameController.PlayNewRound({ x: 2, y: 2 });
+GameController.PlayNewRound({ x: 0, y: 2 });
+GameController.CheckForWin("X", { x: 1, y: 1 });
