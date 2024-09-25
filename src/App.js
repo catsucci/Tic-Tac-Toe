@@ -444,3 +444,5 @@ const GameController = (function (
     GameUIController,
   };
 })();
+
+window.GameController = GameController;
