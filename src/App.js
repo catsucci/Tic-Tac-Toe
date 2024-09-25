@@ -275,6 +275,7 @@ const GameController = (function (
 
   let activePlayer = players[0];
   let winner = null;
+  let draw = null;
 
   const SwitchActivePlayer = () => {
     activePlayer = activePlayer === players[0] ? players[1] : players[0];
@@ -288,11 +289,30 @@ const GameController = (function (
   };
 
   const PlayNewRound = (coordinates) => {
-    if (board.PlaceSymbol(coordinates, activePlayer) && !CheckForWin(activePlayer.symbol, coordinates)) {
+    if (
+      board.PlaceSymbol(coordinates, activePlayer) &&
+      !CheckForWin(activePlayer.symbol, coordinates) &&
+      !CheckForDraw()
+    ) {
       SwitchActivePlayer();
       PrintNewRound();
     }
     GameUIController.CreateUI();
+  };
+
+  const CheckForDraw = () => {
+    for (let i = 0; i < board.GetBoard().length; i++) {
+      for (let j = 0; j < board.GetBoard()[i].length; j++) {
+        console.log({cell: board.GetCell({ x: j, y: i }).GetCoordinates()});
+        console.log({symbol: board.GetCell({ x: j, y: i }).GetSymbol()});
+        if (board.GetCell({ x: j, y: i }).GetSymbol() === null) {
+          draw = null
+          return null;
+        }
+      }
+    }
+    draw = true;
+    return draw;
   };
 
   const CheckForWin = (symbol, { x, y }) => {
@@ -319,6 +339,12 @@ const GameController = (function (
       }
     });
     return winner;
+  };
+
+  const Reset = () => {
+    activePlayer = players[0];
+    winner = null;
+    draw = null;
   };
 
   PrintNewRound();
@@ -351,10 +377,15 @@ const GameController = (function (
     };
 
     const CreateRoundInfo = () => {
+      console.log({ draw: draw });
       const roundInfo = document.createElement("div");
       roundInfo.classList.add("round-info");
       if (winner) {
         roundInfo.innerText = `Player ${winner.name} wins!`;
+        return roundInfo;
+      }
+      if (draw) {
+        roundInfo.innerText = "It's a draw!";
         return roundInfo;
       }
       if (activePlayer) {
@@ -369,8 +400,7 @@ const GameController = (function (
       resetButton.innerText = "Reset";
       resetButton.addEventListener("click", () => {
         board.ClearBoard();
-        activePlayer = players[0];
-        winner = null;
+        Reset();
         ClearUI();
         CreateUI();
       });
@@ -387,7 +417,7 @@ const GameController = (function (
     };
 
     const AddEventListenerToCell = (cell) => {
-      if (!winner) {
+      if (!winner && !draw) {
         cell.addEventListener("click", () => {
           PlayNewRound({ x: cell.dataset.x, y: cell.dataset.y });
         });
