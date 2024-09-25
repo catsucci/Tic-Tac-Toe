@@ -26,11 +26,13 @@ function GameBoard() {
   };
 
   const GetCell = ({ x, y }) => {
+    x = +x;
+    y = +y;
     if (isCoordinatesValid({ x: x, y: y })) {
       return board[y][x];
     } else {
       console.error(
-        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
+        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`,
       );
       return 0;
     }
@@ -40,9 +42,11 @@ function GameBoard() {
    * Getting surrounding cells using clock direction
    */
   const GetSurroundingCells = ({ x, y }) => {
+    x = +x;
+    y = +y;
     if (!isCoordinatesValid({ x: x, y: y })) {
       console.error(
-        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
+        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`,
       );
       return 0;
     }
@@ -118,9 +122,11 @@ function GameBoard() {
   };
 
   const GetSurroundingCellByDirection = ({ x, y }, direction) => {
+    x = +x;
+    y = +y;
     if (!isCoordinatesValid({ x: x, y: y })) {
       console.error(
-        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`
+        `OUT OF SCOOP ERROR: INVALID COORDINATES\n\t(${x}, ${y}) ARE INVALID AS THEY ARE OUTSIDE THE SCOOP OF THE GAME BOARD.`,
       );
       return -1;
     }
@@ -197,7 +203,7 @@ function GameBoard() {
       return 1;
     } else {
       console.error(
-        `CELL OCCUPIED ERROR: CELL (${coordinates.x}, ${coordinates.y}) IS ALREADY OCCUPIED.`
+        `CELL OCCUPIED ERROR: CELL (${coordinates.x}, ${coordinates.y}) IS ALREADY OCCUPIED.`,
       );
       return 0;
     }
@@ -216,6 +222,15 @@ function GameBoard() {
     }
   }
 
+  const ClearBoard = () => {
+    for (let i = 0; i < rows; i++) {
+      board[i] = [];
+      for (let j = 0; j < columns; j++) {
+        board[i][j] = Cell({ x: j, y: i });
+      }
+    }
+  };
+
   return {
     GetBoard,
     PlaceSymbol,
@@ -223,6 +238,7 @@ function GameBoard() {
     GetSurroundingCells,
     GetSurroundingCellByDirection,
     PrintBoard,
+    ClearBoard,
   };
 }
 
@@ -248,7 +264,7 @@ function Cell({ x, y }) {
 
 const GameController = (function (
   playerOneName = "one",
-  playerTwoName = "two"
+  playerTwoName = "two",
 ) {
   const board = GameBoard();
 
@@ -272,41 +288,37 @@ const GameController = (function (
   };
 
   const PlayNewRound = (coordinates) => {
-    if (board.PlaceSymbol(coordinates, activePlayer)) {
-      CheckForWin(activePlayer.symbol, coordinates);
+    if (board.PlaceSymbol(coordinates, activePlayer) && !CheckForWin(activePlayer.symbol, coordinates)) {
       SwitchActivePlayer();
       PrintNewRound();
     }
+    GameUIController.CreateUI();
   };
 
   const CheckForWin = (symbol, { x, y }) => {
     const surroundingCells = board.GetSurroundingCells({ x, y });
     surroundingCells.some((cell) => {
       if (cell.cell.GetSymbol() === symbol) {
-        // console.log({ symbol: cell.cell.GetSymbol(), coordinates: cell.cell.GetCoordinates() });
         let potentialWinningCell;
         if (
           (potentialWinningCell = board.GetSurroundingCellByDirection(
             cell.cell.GetCoordinates(),
-            cell.direction
+            cell.direction,
           )) ||
           (potentialWinningCell = board.GetSurroundingCellByDirection(
             { x, y },
-            cell.direction <= 6 ? cell.direction + 6 : cell.direction - 6
+            cell.direction <= 6 ? cell.direction + 6 : cell.direction - 6,
           ))
         ) {
-          // console.log({ potentialWinningCell: potentialWinningCell, coordinates: potentialWinningCell.GetCoordinates(), symbol: potentialWinningCell.GetSymbol() });
           if (potentialWinningCell.GetSymbol() === symbol) {
             console.log(`Player ${activePlayer.name} wins!`);
+            board.PrintBoard();
             winner = activePlayer;
-            return 1;
           }
-        } else {
-          // console.log("It's a tie!");
-          return 0;
         }
       }
     });
+    return winner;
   };
 
   PrintNewRound();
@@ -330,7 +342,7 @@ const GameController = (function (
         for (let j = 0; j < board.GetBoard()[i].length; j++) {
           const cell = CreateCell(
             board.GetBoard()[i][j].GetSymbol(),
-            board.GetBoard()[i][j].GetCoordinates()
+            board.GetBoard()[i][j].GetCoordinates(),
           );
           boardDiv.appendChild(cell);
         }
@@ -355,6 +367,13 @@ const GameController = (function (
       const resetButton = document.createElement("button");
       resetButton.classList.add("reset");
       resetButton.innerText = "Reset";
+      resetButton.addEventListener("click", () => {
+        board.ClearBoard();
+        activePlayer = players[0];
+        winner = null;
+        ClearUI();
+        CreateUI();
+      });
       return resetButton;
     };
 
@@ -363,7 +382,16 @@ const GameController = (function (
       cell.innerText = symbol;
       cell.dataset.x = coordinates.x;
       cell.dataset.y = coordinates.y;
+      AddEventListenerToCell(cell);
       return cell;
+    };
+
+    const AddEventListenerToCell = (cell) => {
+      if (!winner) {
+        cell.addEventListener("click", () => {
+          PlayNewRound({ x: cell.dataset.x, y: cell.dataset.y });
+        });
+      }
     };
 
     const CreateUI = () => {
@@ -373,6 +401,8 @@ const GameController = (function (
       document.body.appendChild(CreateRoundInfo());
       document.body.appendChild(CreateResetButton());
     };
+
+    CreateUI();
 
     return {
       ClearUI,
@@ -387,13 +417,3 @@ const GameController = (function (
     GameUIController,
   };
 })();
-
-GameController.PlayNewRound({ x: 0, y: 1 });
-GameController.PlayNewRound({ x: 1, y: 1 });
-GameController.PlayNewRound({ x: 0, y: 0 });
-GameController.PlayNewRound({ x: 2, y: 0 });
-GameController.PlayNewRound({ x: 1, y: 0 });
-GameController.PlayNewRound({ x: 1, y: 2 });
-GameController.PlayNewRound({ x: 2, y: 2 });
-GameController.PlayNewRound({ x: 0, y: 2 });
-GameController.GameUIController.CreateUI();
