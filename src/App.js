@@ -303,8 +303,6 @@ const GameController = (function (
   const CheckForDraw = () => {
     for (let i = 0; i < board.GetBoard().length; i++) {
       for (let j = 0; j < board.GetBoard()[i].length; j++) {
-        console.log({cell: board.GetCell({ x: j, y: i }).GetCoordinates()});
-        console.log({symbol: board.GetCell({ x: j, y: i }).GetSymbol()});
         if (board.GetCell({ x: j, y: i }).GetSymbol() === null) {
           draw = null
           return null;
@@ -377,7 +375,6 @@ const GameController = (function (
     };
 
     const CreateRoundInfo = () => {
-      console.log({ draw: draw });
       const roundInfo = document.createElement("div");
       roundInfo.classList.add("round-info");
       if (winner) {
